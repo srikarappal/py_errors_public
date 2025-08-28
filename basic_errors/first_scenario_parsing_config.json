@@ -1,0 +1,6 @@
+{
+    "name": "MyApp",
+    "features": ["a", "b",],  // trailing comma
+    "retries": 3, // can change 
+  }
+  
