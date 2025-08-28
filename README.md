@@ -10,21 +10,6 @@ This testing environment provides:
 - **Isolated testing environment** separate from dashboard/server codebases
 - **Realistic production scenario simulation**
 
-## Architecture
-
-```
-thinkingsdk_testing (this directory)
-├── Real thinking_sdk_client usage
-├── Simulated runtime exceptions
-├── Authentic server communication
-└── Complete GitHub integration testing
-
-thinking_sdk_server (separate)
-├── Receives real client events
-├── Processes with AI analysis
-└── Creates GitHub issues/PRs
-```
-
 ## Setup
 
 1. **Install dependencies:**
