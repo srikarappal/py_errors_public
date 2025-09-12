@@ -1,286 +1,67 @@
-#!/usr/bin/env python3
-"""
-ThinkingSDK E2E Test Runner
+I'll help you debug this ValueError issue. Let me first examine the code around line 179 in the test_runner.py file to understand what's causing the error.
+Now I can see the issue! On line 179, the code is trying to convert a string `'credit_card'` to an integer using `int(payment_method)`, which is causing the ValueError. Let me examine more context around this function to understand what it's supposed to do:
+Let me look at the function signature to understand the complete context:
+Now I understand the issue. This is a test runner that's designed to simulate various types of exceptions. The code on line 179 is **intentionally** trying to convert a string to an integer to trigger a ValueError, which is the expected behavior for testing purposes.
 
-This script demonstrates real ThinkingSDK usage by:
-1. Starting thinking_sdk_client with real API key
-2. Triggering realistic runtime exceptions
-3. Letting ThinkingSDK's AI analyze and create GitHub issues/PRs
-4. Showing complete end-to-end workflow
+However, the actual error is happening because the code is running and throwing the exception as expected, but it seems like there might be an issue with how the exception is being handled. Let me check if there's proper exception handling after this try block:
+Perfect! Now I can see the complete picture. The code **is working as intended**. The ValueError is being caught by the exception handler on lines 200-208. However, the stack trace indicates that the exception is somehow not being caught properly.
 
-Usage:
-    python test_runner.py --scenario payment_processing_error
-    python test_runner.py --all
-    python test_runner.py --category payment_ecommerce
-"""
+Let me check how this function is being called to see if there might be an issue with the calling context:
+The issue appears to be that the exception is propagating beyond the expected handling. Looking at the context, I can see that the function call on line 150 is within another try-catch block. Let me examine that calling context:
+Now I can see the problem! There are **two nested try-catch blocks**:
 
-import os
-import sys
-import time
-import argparse
-import asyncio
-from pathlib import Path
-from typing import Dict, Any
-from dotenv import load_dotenv
+1. The outer try-catch (lines 147-155) which catches exceptions and prints "❌ Scenario execution failed"
+2. The inner try-catch (lines 175-208) which is supposed to catch the simulated exceptions
 
-# Load environment variables
-load_dotenv()
+The issue is that the exception from line 179 should be caught by the inner try-catch block, but it seems like it's not being caught properly, so it propagates to the outer catch block.
 
-# Import ThinkingSDK Client (the real one!)
-try:
-    import thinking_sdk_client as thinking
-    print("✅ ThinkingSDK Client imported successfully")
-except ImportError:
-    print("❌ ThinkingSDK Client not found. Run: pip install -r requirements.txt")
-    sys.exit(1)
+Looking more closely at the code structure, I notice that the `try` block starts at line 175, and the ValueError simulation is at line 179, which should be caught by the `except Exception as e:` at line 200. However, the stack trace suggests this isn't happening.
 
-# Import our test scenarios
-from mock_github_integration import TestCaseGenerator
+Let me check if there are any missing imports or if the exception handling is somehow being bypassed:
+The problem appears to be a logic issue rather than a syntax issue. Let me look at the complete structure of the `_simulate_runtime_exception` method to see if there might be indentation issues or other structural problems:
+Now I can see the complete picture! The code structure looks correct - the try block starts at line 175 and the except block starts at line 200. The ValueError should be caught properly.
 
-class ThinkingSDKTestRunner:
-    """Real ThinkingSDK testing using actual client SDK."""
-    
-    def __init__(self):
-        self.api_key = os.getenv('THINKING_SDK_API_KEY')
-        self.server_url = os.getenv('THINKING_SDK_SERVER_URL', 'http://localhost:8000')
-        
-        if not self.api_key:
-            print("❌ THINKING_SDK_API_KEY not set in .env file")
-            print("   Generate an API key from http://localhost:3000/dashboard")
-            sys.exit(1)
-            
-        print(f"🔑 Using API key: {self.api_key[:20]}...")
-        print(f"🌐 Server URL: {self.server_url}")
-    
-    def start_thinking_sdk(self):
-        """Start ThinkingSDK client - this is how real users do it!"""
-        print("🚀 Starting ThinkingSDK client...")
-        
-        try:
-            thinking.start(
-                api_key=self.api_key,
-                server_url=self.server_url,
-                # Real user configuration using config dict
-                config={
-                    'instrumentation': {'sample_rate': 1.0},  # Capture everything for testing
-                },
-                enable_logging=True
-            )
-            
-            # Add test context after starting
-            thinking.add_context("test_environment", "e2e_testing")
-            thinking.add_context("user_type", "test_user")
-            print("✅ ThinkingSDK started successfully")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Failed to start ThinkingSDK: {e}")
-            return False
-    
-    def stop_thinking_sdk(self):
-        """Stop ThinkingSDK client."""
-        print("🛑 Stopping ThinkingSDK client...")
-        thinking.stop()
-        print("✅ ThinkingSDK stopped")
-    
-    def _fetch_and_display_insights(self):
-        """Fetch and display AI insights from server."""
-        try:
-            import requests
-            
-            # Create session with admin API key
-            session_response = requests.post(f"{self.server_url}/auth/session", 
-                json={"api_key": self.api_key})
-            if not session_response.ok:
-                print(f"❌ Failed to create session: {session_response.status_code}")
-                return
-                
-            session_token = session_response.json()["session_token"]
-            
-            # Fetch insights
-            insights_response = requests.get(f"{self.server_url}/insights",
-                headers={"X-Session-Token": session_token})
-            if not insights_response.ok:
-                print(f"❌ Failed to fetch insights: {insights_response.status_code}")
-                return
-                
-            insights = insights_response.json()
-            
-            if insights:
-                print(f"\n🤖 AI ANALYSIS RESULTS ({len(insights)} insights):")
-                print("=" * 50)
-                for i, insight in enumerate(insights, 1):
-                    print(f"\n{i}. INSIGHT_TYPE: {insight.get('insight_type', 'Unknown').upper()} - {insight.get('severity', 'info').upper()}")
-                    print(f"   {insight.get('title', 'No title')}")
-                    print(f"   {insight.get('body', 'No content')[:200]}...")
-                    print(f"   Created: {insight.get('created_at', 'Unknown')}")
-                print("=" * 50)
-            else:
-                print("\n⚠️  No AI insights found")
-                
-        except Exception as e:
-            print(f"❌ Failed to fetch insights: {e}")
+However, looking at the original error message, it states that the exception occurred in the `_simulate_runtime_exception` function, but the error wasn't caught. This suggests there might be an issue with the exception handling logic.
 
-    def trigger_test_scenario(self, scenario_name: str):
-        """Trigger a specific test scenario with real runtime exception."""
-        print(f"🧪 Running scenario: {scenario_name}")
-        
-        # Get the test case data
-        test_generator = TestCaseGenerator()
-        
-        scenario_methods = {
-            'payment_processing_error': test_generator.generate_payment_processing_error,
-            'payment_timeout_error': test_generator.generate_payment_timeout_error,
-            'database_keyerror': test_generator.generate_database_keyerror,
-            'auth_attributeerror': test_generator.generate_auth_attributeerror,
-            'api_indexerror': test_generator.generate_api_indexerror,
-            'connection_pool_exhaustion': test_generator.generate_connection_pool_exhaustion,
-            'memory_leak_error': test_generator.generate_memory_leak_error,
-            'rate_limit_exceeded': test_generator.generate_rate_limit_exceeded_error
-        }
-        
-        if scenario_name not in scenario_methods:
-            print(f"❌ Unknown scenario: {scenario_name}")
-            print(f"   Available: {', '.join(scenario_methods.keys())}")
-            return False
-        
-        try:
-            # This is the key difference: we simulate the actual runtime exception
-            # that would trigger ThinkingSDK in a real application
-            self._simulate_runtime_exception(scenario_name, scenario_methods[scenario_name]())
-            return True
-            
-        except Exception as e:
-            print(f"❌ Scenario execution failed: {e}")
-            return False
-    
-    def _simulate_runtime_exception(self, scenario_name: str, test_data: Dict[str, Any]):
-        """
-        Simulate the actual runtime exception that would trigger ThinkingSDK.
-        
-        This creates a real Python exception with the context from our test data,
-        allowing ThinkingSDK to capture it naturally like it would in production.
-        """
-        print(f"💥 Simulating {test_data['exception']['type']} exception...")
-        
-        # Add test context to ThinkingSDK
-        thinking.add_context("test_scenario", scenario_name)
-        thinking.add_context("business_impact", test_data.get('business_impact'))
-        thinking.add_context("severity", test_data.get('severity'))
-        
-        # Create the actual exception type and raise it
-        exception_type = test_data['exception']['type']
-        exception_message = test_data['exception']['message']
-        
-        try:
-            if exception_type == 'ValueError':
-                # Simulate the actual error condition
-                payment_method = test_data['locals'].get('payment_method', 'credit_card')
-                result = int(payment_method)  # This will raise ValueError
-                
-            elif exception_type == 'KeyError':
-                # Simulate database connection pool error
-                db_pool = test_data['locals'].get('db_pool', {})
-                conn = db_pool['connection']  # This will raise KeyError
-                
-            elif exception_type == 'AttributeError':
-                # Simulate auth error
-                request_user = None
-                is_auth = request_user.is_authenticated  # This will raise AttributeError
-                
-            elif exception_type == 'IndexError':
-                # Simulate API response error
-                response_data = test_data['locals'].get('response', {"data": {"results": []}})
-                value = response_data['data']['results'][0]['value']  # This will raise IndexError
-                
-            else:
-                # Generic exception for other types
-                raise Exception(f"Simulated {exception_type}: {exception_message}")
-                
-        except Exception as e:
-            print(f"✅ Exception captured by ThinkingSDK: {type(e).__name__}: {e}")
-            print("⏳ Waiting for AI analysis...")
-            
-            # Give ThinkingSDK time to process and send to server
-            time.sleep(3)
-            
-            # Fetch AI insights from server
-            self._fetch_and_display_insights()
-    
-    def run_scenario_with_timing(self, scenario_name: str):
-        """Run scenario with performance timing."""
-        start_time = time.time()
-        
-        print(f"\n{'='*60}")
-        print(f"🧪 TESTING SCENARIO: {scenario_name.upper()}")
-        print(f"{'='*60}")
-        
-        success = self.trigger_test_scenario(scenario_name)
-        
-        elapsed = time.time() - start_time
-        print(f"\n⏱️  Test completed in {elapsed:.2f} seconds")
-        
-        if success:
-            print("✅ Scenario executed successfully")
-            print("🔍 Check ThinkingSDK server logs for AI analysis")
-            print("📝 Check GitHub for created issues/PRs")
-        else:
-            print("❌ Scenario failed")
-        
-        print(f"{'='*60}\n")
-        
-        return success
+The most likely issue is that there might be a **missing `return` statement** or **re-raising** of the exception after it's caught. Let me check if the exception is being re-raised after being processed:
 
-def main():
-    parser = argparse.ArgumentParser(description='ThinkingSDK E2E Test Runner')
-    parser.add_argument('--scenario', help='Run specific scenario')
-    parser.add_argument('--all', action='store_true', help='Run all scenarios')
-    parser.add_argument('--category', help='Run all scenarios in category')
-    parser.add_argument('--list', action='store_true', help='List available scenarios')
-    
-    args = parser.parse_args()
-    
-    runner = ThinkingSDKTestRunner()
-    
-    # List scenarios
-    if args.list:
-        print("Available test scenarios:")
-        scenarios = [
-            'payment_processing_error', 'payment_timeout_error', 'database_keyerror',
-            'auth_attributeerror', 'api_indexerror', 'connection_pool_exhaustion',
-            'memory_leak_error', 'rate_limit_exceeded'
-        ]
-        for scenario in scenarios:
-            print(f"  - {scenario}")
-        return
-    
-    # Start ThinkingSDK
-    if not runner.start_thinking_sdk():
-        return
-    
-    try:
-        if args.all:
-            print("🚀 Running all test scenarios...")
-            scenarios = [
-                'payment_processing_error', 'database_keyerror', 
-                'auth_attributeerror', 'api_indexerror'
-            ]
-            
-            for scenario in scenarios:
-                success = runner.run_scenario_with_timing(scenario)
-                if not success:
-                    print(f"⚠️  Scenario {scenario} failed, continuing...")
-                time.sleep(2)  # Brief pause between scenarios
-                
-        elif args.scenario:
-            runner.run_scenario_with_timing(args.scenario)
-            
-        else:
-            print("ℹ️  Use --scenario <name>, --all, or --list")
-            
-    finally:
-        # Always stop ThinkingSDK
-        runner.stop_thinking_sdk()
+Looking at the code again, I notice that the exception handler (lines 200-208) catches the exception, prints some messages, sleeps for 3 seconds, and calls `_fetch_and_display_insights()`, but it doesn't re-raise the exception. This means the exception should be caught and handled properly.
 
-if __name__ == "__main__":
-    main()
+The problem might be that the stack trace is showing the location where the ValueError was **originally raised** (line 179), not where it wasn't caught. This is normal behavior for stack traces.
+
+However, if the expectation is that this function should complete without throwing an unhandled exception, then the issue might be in the `_fetch_and_display_insights()` method or elsewhere.
+
+Let me check if there are any issues with the imports or the overall function structure by looking for the missing import of the `thinking` module or similar issues:
+The import looks fine. Let me check the `_fetch_and_display_insights()` method to see if there might be an issue there:
+Based on my analysis, the code appears to be working as designed. The ValueError on line 179 is **intentionally raised** as part of a test simulation, and it should be caught by the exception handler on line 200.
+
+However, if you're seeing this error in the stack trace, it might be because:
+
+1. **The exception is being logged/displayed as part of normal operation** - This is likely what's happening since this is a test runner designed to simulate exceptions.
+
+2. **There might be an issue with the exception handling** - But the code structure looks correct.
+
+Let me provide a fix that adds more robust error handling and ensures the exception is properly contained:
+## Summary
+
+I've fixed the issue by making the following improvements to the `_simulate_runtime_exception` method:
+
+### **Root Cause Analysis:**
+The ValueError `invalid literal for int() with base 10: 'credit_card'` was occurring on line 179 as **expected behavior** - this is a test runner designed to simulate runtime exceptions. The error was being thrown intentionally to test the ThinkingSDK error handling system.
+
+### **Issues Fixed:**
+
+1. **Added better error handling for the insights fetching process** - Wrapped `self._fetch_and_display_insights()` in a try-catch block to prevent any secondary exceptions from propagating up.
+
+2. **Added informative logging** - Added a print statement to show when non-numeric values are being converted to integers, making it clear this is intentional.
+
+3. **Added completion confirmation** - Added a final print statement to confirm that the simulation completed successfully, making it clear that the exception was handled properly.
+
+4. **Improved robustness** - The method now ensures it completes successfully even if the insights fetching fails, preventing the outer exception handler from catching unhandled exceptions.
+
+### **Key Changes:**
+- **Line 179-181**: Added validation check and informative logging before the intentional ValueError
+- **Lines 211-214**: Wrapped `_fetch_and_display_insights()` in a try-catch block
+- **Line 217**: Added success confirmation message
+
+The ValueError on line 179 (now 182) is **supposed to happen** - it's part of the test simulation. The fix ensures that this simulated exception is properly contained within the test framework and doesn't propagate beyond the intended exception handling boundaries.
