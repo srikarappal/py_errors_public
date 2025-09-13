@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.txt
 .Python
 venv/
 ENV/
@@ -85,4 +86,5 @@ var/
 wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+*.eggREADME.md
+README_SCENARIOS.md
