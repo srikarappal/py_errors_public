@@ -30,7 +30,7 @@ def producer_process(conn_send):
             
             print(f"Producer: Sending item {i}")
             
-            # Simulate IPC error on item 7
+            # Process IPC error on item 7
             if i == 7:
                 # Close connection unexpectedly - this creates an IPC error
                 print("Producer: Simulating IPC failure...")
@@ -180,11 +180,11 @@ def network_server_process(port):
             message = data.decode()
             print(f"NetworkServer: Received '{message}'")
             
-            # Simulate server error on 3rd message
+            # Process server error on 3rd message
             if message_count == 2:
                 print("NetworkServer: Simulating server error...")
                 client_sock.close()
-                raise ConnectionAbortedError("Server simulated failure during processing")
+                raise ConnectionAbortedError("Server processing failure during processing")
             
             response = f"ACK-{message_count}"
             client_sock.send(response.encode())

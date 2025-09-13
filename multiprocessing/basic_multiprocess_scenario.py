@@ -19,7 +19,7 @@ def worker_process(worker_id, shared_data):
     try:
         print(f"Worker-{worker_id}: Starting work...")
         
-        # Simulate work that might fail
+        # Process work that might fail
         for i in range(5):
             print(f"Worker-{worker_id}: Processing item {i}")
             time.sleep(0.1)
@@ -27,7 +27,7 @@ def worker_process(worker_id, shared_data):
             # Introduce errors in some workers
             if worker_id == 2 and i == 3:
                 # This should be captured by ThinkingSDK
-                raise ValueError(f"Worker-{worker_id}: Simulated processing error at item {i}")
+                raise ValueError(f"Worker-{worker_id}: Processd processing error at item {i}")
             
             # Access shared data (potential race condition)
             shared_data[worker_id] = f"Worker-{worker_id} completed item {i}"

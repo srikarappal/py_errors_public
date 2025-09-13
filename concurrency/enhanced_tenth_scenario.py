@@ -24,7 +24,7 @@ def producer():
     
     try:
         print("Producer: Starting data production...")
-        time.sleep(0.1)  # Simulate work
+        time.sleep(0.1)  # Process work
         
         print("Producer: Data ready, attempting to notify...")
         data_ready = True
@@ -66,7 +66,7 @@ def consumer():
         
         if data_ready:
             print("Consumer: Processing data...")
-            time.sleep(0.1)  # Simulate processing
+            time.sleep(0.1)  # Process processing
             print("Consumer: Data processed successfully!")
         
     except Exception as e:

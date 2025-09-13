@@ -122,11 +122,11 @@ def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, r
                 
                 print(f"Worker-{worker_id}: Processing {work_item}")
                 
-                # Simulate work that might fail
+                # Process work that might fail
                 if work_item.get("should_fail"):
-                    raise ValueError(f"Worker-{worker_id}: Simulated failure processing {work_item}")
+                    raise ValueError(f"Worker-{worker_id}: Processing failure processing {work_item}")
                 
-                # Simulate work
+                # Process work
                 time.sleep(0.1)
                 result = f"Worker-{worker_id} processed {work_item}"
                 

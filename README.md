@@ -26,7 +26,7 @@ This testing environment provides:
 3. **Generate API key:**
    - Visit http://localhost:3000/dashboard
    - Generate a real API key
-   - Add to `.env` as `THINKING_SDK_API_KEY`
+   - Add to `.env` as `THINKINGSDK_API_KEY`
 
 4. **Setup GitHub token:**
    - Create GitHub Personal Access Token with repo permissions

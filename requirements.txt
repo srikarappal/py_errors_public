@@ -2,6 +2,7 @@
 
 # Core ThinkingSDK Client
 thinking_sdk_client
+keyring
 #-e ../thinkingSDK/thinking_sdk_client
 
 # Testing and GitHub Integration

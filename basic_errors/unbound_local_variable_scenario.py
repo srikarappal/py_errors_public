@@ -13,7 +13,7 @@ thinking.start(config_file="thinkingsdk.yaml")
 x = 10
 
 def bump():
-    x = x + 1      # UnboundLocalError: local variable 'x' referenced before assignment
+    x = x + 1
     return x
 
-bump()  # Let the automatic exit handler flush events
+bump()

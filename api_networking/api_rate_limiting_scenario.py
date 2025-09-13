@@ -35,7 +35,7 @@ class APIClient:
         try:
             print(f"🌐 API Request #{self.request_count}: {method} {url}")
             
-            # Simulate various network issues
+            # Process various network issues
             if random.random() < 0.1:  # 10% chance of timeout
                 kwargs['timeout'] = 0.1  # Very short timeout
             
@@ -96,15 +96,15 @@ def aggressive_api_client(client_id, num_requests=20):
         print(f"🚨 Client-{client_id} Exception: {e}")
         raise
 
-def simulate_cascading_timeout_failure():
-    """Simulate cascading failures due to API timeouts"""
+def process_cascading_timeout_failure():
+    """Process cascading failures due to API timeouts"""
     
     print("🌊 Simulating cascading timeout failure...")
     
     try:
         # Service A calls Service B calls Service C pattern
         def service_c_call():
-            """Simulate slow external service"""
+            """Process slow external service"""
             print("  🔗 Service C: Processing (slow)...")
             time.sleep(5)  # Intentionally slow
             return {"service_c_result": "data from service C"}
@@ -115,7 +115,7 @@ def simulate_cascading_timeout_failure():
             
             # Anti-pattern: No timeout handling
             try:
-                # Simulate HTTP call with inadequate timeout
+                # Process HTTP call with inadequate timeout
                 start_time = time.time()
                 result = service_c_call()  # This will take 5 seconds
                 duration = time.time() - start_time
@@ -155,7 +155,7 @@ def simulate_cascading_timeout_failure():
         raise
 
 def test_circuit_breaker_missing():
-    """Test scenario where circuit breaker is missing"""
+    """Production scenario."""
     
     print("⚡ Testing missing circuit breaker pattern...")
     
@@ -163,14 +163,14 @@ def test_circuit_breaker_missing():
     max_calls = 20
     
     def failing_external_service():
-        """Simulate external service that's down"""
+        """Process external service that's down"""
         nonlocal failing_service_calls
         failing_service_calls += 1
         
         print(f"  📞 Call #{failing_service_calls} to failing service...")
         
         # Service is down - always fails
-        time.sleep(0.5)  # Simulate network delay
+        time.sleep(0.5)  # Process network delay
         raise requests.exceptions.ConnectionError("External service unavailable")
     
     def service_without_circuit_breaker():
@@ -203,7 +203,7 @@ def main():
     print("🚨 Starting API rate limiting and network failure scenarios...")
     
     try:
-        # Test 1: Rate limiting simulation
+        # Test 1: Rate limiting processing
         print("\n=== Test 1: API Rate Limiting ===")
         
         # Create multiple clients that hit the API aggressively
@@ -233,7 +233,7 @@ def main():
         print("\n=== Test 2: Cascading Timeout Failures ===")
         
         try:
-            simulate_cascading_timeout_failure()
+            process_cascading_timeout_failure()
         except Exception as e:
             print(f"✅ Cascading failure properly detected: {e}")
         

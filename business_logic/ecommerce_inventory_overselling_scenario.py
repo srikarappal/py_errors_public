@@ -58,7 +58,7 @@ class InventoryManager:
         if current_inventory >= quantity:
             print(f"✅ Inventory available: {current_inventory} >= {quantity}")
             
-            # Simulate processing delay (network call, validation, etc.)
+            # Process processing delay (network call, validation, etc.)
             time.sleep(random.uniform(0.01, 0.1))
             
             # Another thread might have modified inventory here!
@@ -82,7 +82,7 @@ class InventoryManager:
             current_inventory = self.get_product_inventory(product_id)
             
             if current_inventory >= quantity:
-                # Simulate processing delay even inside lock (not ideal, but safer)
+                # Process processing delay even inside lock (not ideal, but safer)
                 time.sleep(random.uniform(0.001, 0.01))
                 
                 product = self.products[product_id]
@@ -147,12 +147,12 @@ class InventoryManager:
         
         return report
 
-def simulate_flash_sale_customer(customer_id: int, inventory_manager: InventoryManager, 
+def process_flash_sale_customer(customer_id: int, inventory_manager: InventoryManager, 
                                 target_product: str, use_safe_method: bool = False):
-    """Simulate customer trying to buy during flash sale"""
+    """Process customer trying to buy during flash sale"""
     
     try:
-        # Random delay to simulate different arrival times
+        # Random delay to process different arrival times
         time.sleep(random.uniform(0, 0.5))
         
         # Try to buy 1-2 items
@@ -173,11 +173,11 @@ def simulate_flash_sale_customer(customer_id: int, inventory_manager: InventoryM
         print(f"🚨 Customer-{customer_id} exception: {e}")
         raise
 
-def run_flash_sale_simulation(product_id: str, num_customers: int, use_safe_method: bool = False):
-    """Run flash sale simulation"""
+def run_flash_sale_processing(product_id: str, num_customers: int, use_safe_method: bool = False):
+    """Run flash sale processing"""
     
     method_name = "SAFE" if use_safe_method else "UNSAFE"
-    print(f"\n🔥 Flash Sale Simulation ({method_name}): {num_customers} customers for {product_id}")
+    print(f"\n🔥 Flash Sale Processing ({method_name}): {num_customers} customers for {product_id}")
     
     inventory_manager = InventoryManager()
     initial_inventory = inventory_manager.get_product_inventory(product_id)
@@ -194,7 +194,7 @@ def run_flash_sale_simulation(product_id: str, num_customers: int, use_safe_meth
         
         for customer_id in range(num_customers):
             future = executor.submit(
-                simulate_flash_sale_customer,
+                process_flash_sale_customer,
                 customer_id,
                 inventory_manager,
                 product_id,
@@ -264,7 +264,7 @@ def main():
         print("\n=== Test 1: Unsafe Inventory Reservation ===")
         
         try:
-            unsafe_results = run_flash_sale_simulation(
+            unsafe_results = run_flash_sale_processing(
                 product_id="laptop_001",
                 num_customers=15,  # More customers than inventory
                 use_safe_method=False
@@ -284,7 +284,7 @@ def main():
         print("\n=== Test 2: Safe Inventory Reservation ===")
         
         try:
-            safe_results = run_flash_sale_simulation(
+            safe_results = run_flash_sale_processing(
                 product_id="phone_002", 
                 num_customers=10,  # More customers than inventory (3 units)
                 use_safe_method=True
@@ -302,7 +302,7 @@ def main():
         print("\n=== Test 3: Extreme Concurrency Test ===")
         
         try:
-            extreme_results = run_flash_sale_simulation(
+            extreme_results = run_flash_sale_processing(
                 product_id="tablet_003",
                 num_customers=50,  # Many more customers than inventory (2 units)
                 use_safe_method=False

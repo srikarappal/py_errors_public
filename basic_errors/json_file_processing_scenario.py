@@ -40,10 +40,7 @@ def main():
         print("🔄 Stopping ThinkingSDK to flush events...")
         thinking.stop()  # Stop and flush events
         print("⏳ ThinkingSDK stopped - events should be sent")
-        raise  # Re-raise the exception
-
-    
+        raise
 
 if __name__ == "__main__":
-    # Entry point of the script
     main()

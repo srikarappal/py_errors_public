@@ -58,9 +58,9 @@ def setup_environment_file():
         load_dotenv()
         
         # Check if critical values are set
-        api_key = os.getenv('THINKING_SDK_API_KEY')
+        api_key = os.getenv('THINKINGSDK_API_KEY')
         if not api_key or api_key.strip() == '':
-            print("⚠️  THINKING_SDK_API_KEY not set in .env")
+            print("⚠️  THINKINGSDK_API_KEY not set in .env")
             setup_api_key()
         else:
             print(f"✅ API key configured: {api_key[:20]}...")
@@ -83,7 +83,7 @@ def setup_api_key():
         print("   Continuing anyway...")
     
     # Save to .env file
-    set_key('.env', 'THINKING_SDK_API_KEY', api_key)
+    set_key('.env', 'THINKINGSDK_API_KEY', api_key)
     print("✅ API key saved to .env")
 
 def setup_github_token():

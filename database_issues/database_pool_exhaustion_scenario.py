@@ -12,14 +12,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 thinking.start(config_file="thinkingsdk.yaml")
 
-# Simulate connection pool with limited connections
+# Process connection pool with limited connections
 MAX_CONNECTIONS = 5
 connection_pool = []
 pool_lock = threading.Lock()
 active_connections = 0
 
 def get_connection():
-    """Simulate getting connection from pool"""
+    """Process getting connection from pool"""
     global active_connections
     
     with pool_lock:
@@ -52,7 +52,7 @@ def database_worker(worker_id, hold_time=2.0):
         # Get connection from pool
         conn = get_connection()
         
-        # Simulate database work
+        # Process database work
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE IF NOT EXISTS test_table (id INTEGER, data TEXT)")
         cursor.execute("INSERT INTO test_table VALUES (?, ?)", (worker_id, f"data_{worker_id}"))
@@ -76,8 +76,8 @@ def database_worker(worker_id, hold_time=2.0):
         if 'conn' in locals():
             release_connection(conn)
 
-def simulate_n_plus_one_queries():
-    """Simulate N+1 query problem"""
+def process_n_plus_one_queries():
+    """Process N+1 query problem"""
     try:
         print("🔍 Simulating N+1 query problem...")
         
@@ -177,10 +177,10 @@ def main():
         
         # Test 2: N+1 Query Problem
         print("\n=== Test 2: N+1 Query Anti-pattern ===")
-        author_books = simulate_n_plus_one_queries()
+        author_books = process_n_plus_one_queries()
         print(f"📚 Retrieved data for {len(author_books)} authors with N+1 queries")
         
-        # Test 3: Connection leak simulation
+        # Test 3: Connection leak processing
         print("\n=== Test 3: Connection Leak Detection ===")
         
         leaked_connections = []

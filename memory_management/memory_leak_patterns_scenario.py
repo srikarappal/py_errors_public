@@ -118,7 +118,7 @@ class ThreadLocalLeaker:
             print(f"Worker-{worker_id}: Creating thread-local data...")
             self.create_thread_data()
             
-            # Simulate work
+            # Process work
             time.sleep(1)
             
             # Access thread-local data
@@ -239,7 +239,7 @@ def test_unbounded_cache_leak():
     print(f"Cache using {cache_memory:.1f} MB")
     print(f"Cache size: {len(cache.cache)} items")
     
-    # Simulate cache that never expires items
+    # Process cache that never expires items
     print("Adding more items to unbounded cache...")
     for i in range(1000):
         key = f"extra_key_{i}"
@@ -305,7 +305,7 @@ def test_global_state_accumulation():
     """Test global state accumulation over time"""
     print("🌍 Testing global state accumulation...")
     
-    # Simulate global variables that accumulate data
+    # Process global variables that accumulate data
     if not hasattr(sys.modules[__name__], 'GLOBAL_DATA_STORE'):
         sys.modules[__name__].GLOBAL_DATA_STORE = {}
     
@@ -314,7 +314,7 @@ def test_global_state_accumulation():
     
     initial_memory = monitor_memory_usage()
     
-    # Simulate application adding data to global state
+    # Process application adding data to global state
     for i in range(100):
         # Add to global data store (anti-pattern: never cleaned)
         key = f"global_key_{i}"

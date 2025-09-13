@@ -13,21 +13,21 @@ import os
 thinking.start(config_file="thinkingsdk.yaml")
 
 def leaky_worker(worker_id):
-    """Worker that simulates work but has resource management issues"""
+    """Worker that processs work but has resource management issues"""
     try:
         print(f"Worker-{worker_id}: Starting work...")
         
-        # Simulate work with potential to hang
+        # Process work with potential to hang
         work_duration = 0.1
         start_time = time.time()
         
         while time.time() - start_time < work_duration:
-            # Simulate CPU work
+            # Process CPU work
             _ = sum(i * i for i in range(1000))
         
         print(f"Worker-{worker_id}: Work completed")
         
-        # Simulate a condition where some threads might hang
+        # Process a condition where some threads might hang
         if worker_id % 7 == 0:  # Every 7th thread has issues
             print(f"Worker-{worker_id}: Simulating hang condition...")
             time.sleep(10)  # This will cause thread to hang

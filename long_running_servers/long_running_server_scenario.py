@@ -1,6 +1,6 @@
 """
 Long-running server scenarios that test resource leaks, memory growth, and degradation over time.
-These scenarios simulate real production server issues that only manifest after hours/days of runtime.
+These are real production server issues that only manifest after hours/days of runtime.
 """
 
 import thinking_sdk_client as thinking
@@ -58,7 +58,7 @@ class MemoryLeakyHandler(BaseHTTPRequestHandler):
             # Memory leak pattern 3: Unbounded cache
             cache_key = f"{self.path}_{hash(str(self.headers))}"
             if cache_key not in self.cached_responses:
-                # Simulate expensive computation
+                # Process expensive computation
                 expensive_data = {
                     'computation_result': [i**2 for i in range(1000)],  # Large data
                     'metadata': {
@@ -70,7 +70,7 @@ class MemoryLeakyHandler(BaseHTTPRequestHandler):
                 # Cache grows forever (anti-pattern)
                 self.cached_responses[cache_key] = expensive_data
             
-            # Simulate response
+            # Process response
             if self.path == '/health':
                 response_data = {
                     'status': 'ok',
@@ -80,7 +80,7 @@ class MemoryLeakyHandler(BaseHTTPRequestHandler):
                     'cache_size': len(self.cached_responses)
                 }
             elif self.path == '/heavy-computation':
-                # Simulate CPU-intensive work that creates objects
+                # Process CPU-intensive work that creates objects
                 result = self._heavy_computation()
                 response_data = {'result': result}
             else:
@@ -99,7 +99,7 @@ class MemoryLeakyHandler(BaseHTTPRequestHandler):
             self.wfile.write(f"Internal server error: {e}".encode())
     
     def _heavy_computation(self):
-        """Simulate heavy computation that might leak memory"""
+        """Process heavy computation that might leak memory"""
         # Create large temporary objects
         large_lists = []
         

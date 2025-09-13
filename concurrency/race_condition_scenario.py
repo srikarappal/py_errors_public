@@ -27,7 +27,7 @@ def withdraw(amount, account_holder):
         print(f"{account_holder}: Current balance: ${current_balance}")
         
         if current_balance >= amount:
-            # Simulate processing delay - this creates the race condition window
+            # Process processing delay - this creates the race condition window
             time.sleep(random.uniform(0.01, 0.05))
             
             # Another thread might modify balance here!
