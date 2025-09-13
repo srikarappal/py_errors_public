@@ -11,7 +11,8 @@ environment: "${ENV:-development}"  # Used for filtering in dashboard
 git_repositories:
   # List of repositories where auto-fix should be enabled
   # Format: "https://github.com/username/repository" or "git@github.com:username/repository.git"
-  - "https://github.com/user/my-project"
+  #- "https://github.com/user/my-project"
+  - "https://github.com/srikarappal/py_errors_public"
   # - "https://github.com/user/another-project"
   # - "git@github.com:company/private-repo.git"
   
