@@ -58,7 +58,7 @@ class EventListenerLeaker:
             processed = len(large_data) + len(event_data)
             return processed
         
-        self.add_listener('test_event', leaky_callback)
+        self.add_listener('check_event', leaky_callback)
         # Listener holds reference to large_data even after this function returns
 
 class CacheWithoutLimits:
@@ -115,7 +115,7 @@ class ThreadLocalLeaker:
     def worker_thread(self, worker_id):
         """Worker thread that creates thread-local data"""
         try:
-            print(f"Worker-{worker_id}: Creating thread-local data...")
+            
             self.create_thread_data()
             
             # Process work
@@ -123,13 +123,12 @@ class ThreadLocalLeaker:
             
             # Access thread-local data
             data_size = len(self.thread_local_data.large_data)
-            print(f"Worker-{worker_id}: Thread-local data size: {data_size}")
+            
             
             # Anti-pattern: Don't explicitly clean up thread-local data
             # When thread exits, thread-local data might not be immediately GC'd
             
         except Exception as e:
-            print(f"🚨 Worker-{worker_id} exception: {e}")
 
 def monitor_memory_usage():
     """Monitor memory usage over time"""
@@ -142,12 +141,11 @@ def monitor_memory_usage():
         'timestamp': time.time()
     }
 
-def test_circular_reference_leak():
+def check_circular_reference_leak():
     """Test circular reference memory leak"""
-    print("🔄 Testing circular reference memory leak...")
     
     initial_memory = monitor_memory_usage()
-    print(f"Initial memory: {initial_memory['rss_mb']:.1f} MB")
+    
     
     # Create circular references
     root_objects = []
@@ -167,17 +165,17 @@ def test_circular_reference_leak():
         root_objects.append(root)
     
     after_creation_memory = monitor_memory_usage()
-    print(f"After creating circular refs: {after_creation_memory['rss_mb']:.1f} MB")
+    
     
     # Clear references
     root_objects.clear()
     
     # Force garbage collection
     collected = gc.collect()
-    print(f"GC collected {collected} objects")
+    
     
     after_gc_memory = monitor_memory_usage()
-    print(f"After GC: {after_gc_memory['rss_mb']:.1f} MB")
+    
     
     # Check if memory was properly released
     memory_leak = after_gc_memory['rss_mb'] - initial_memory['rss_mb']
@@ -186,9 +184,9 @@ def test_circular_reference_leak():
     
     return memory_leak
 
-def test_event_listener_leak():
+def check_event_listener_leak():
     """Test event listener memory leak"""
-    print("🎧 Testing event listener memory leak...")
+    
     
     initial_memory = monitor_memory_usage()
     
@@ -200,12 +198,12 @@ def test_event_listener_leak():
     
     # Emit fewer events to trigger listeners
     for i in range(10):
-        emitter.emit_event('test_event', {'data': f'event_{i}'})
+        emitter.emit_event('check_event', {'data': f'event_{i}'})
     
     after_listeners_memory = monitor_memory_usage()
     memory_used = after_listeners_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Memory used by event listeners: {memory_used:.1f} MB")
+    
     
     # Clear the emitter
     del emitter
@@ -221,26 +219,25 @@ def test_event_listener_leak():
     
     return memory_leaked
 
-def test_unbounded_cache_leak():
+def check_unbounded_cache_leak():
     """Test unbounded cache memory leak"""
-    print("💾 Testing unbounded cache memory leak...")
     
     initial_memory = monitor_memory_usage()
     
     cache = CacheWithoutLimits()
     
     # Fill cache with smaller amount of data for faster execution
-    print("Generating cache data...")
+    
     cache.generate_large_cache_data(200)  # 200 items
     
     after_cache_memory = monitor_memory_usage()
     cache_memory = after_cache_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Cache using {cache_memory:.1f} MB")
-    print(f"Cache size: {len(cache.cache)} items")
+    
+    
     
     # Process cache that never expires items
-    print("Adding more items to unbounded cache...")
+    
     for i in range(1000):
         key = f"extra_key_{i}"
         large_value = [j for j in range(5000)]  # Large value
@@ -249,16 +246,16 @@ def test_unbounded_cache_leak():
     final_memory = monitor_memory_usage()
     total_cache_memory = final_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Final cache memory: {total_cache_memory:.1f} MB")
+    
     
     if total_cache_memory > 20:  # Cache using too much memory
         raise MemoryError(f"Unbounded cache memory leak: {total_cache_memory:.1f} MB used")
     
     return total_cache_memory
 
-def test_thread_local_leak():
+def check_thread_local_leak():
     """Test thread-local storage memory leak"""
-    print("🧵 Testing thread-local storage memory leak...")
+    
     
     initial_memory = monitor_memory_usage()
     
@@ -280,7 +277,7 @@ def test_thread_local_leak():
     after_threads_memory = monitor_memory_usage()
     thread_memory = after_threads_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Memory after {num_threads} threads: {thread_memory:.1f} MB")
+    
     
     # Clear references and force GC
     threads.clear()
@@ -294,16 +291,16 @@ def test_thread_local_leak():
     final_memory = monitor_memory_usage()
     memory_leaked = final_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Memory after cleanup: {memory_leaked:.1f} MB")
+    
     
     if memory_leaked > 3:  # More than 3MB not released
         raise MemoryError(f"Thread-local storage leak: {memory_leaked:.1f} MB not released")
     
     return memory_leaked
 
-def test_global_state_accumulation():
+def check_global_state_accumulation():
     """Test global state accumulation over time"""
-    print("🌍 Testing global state accumulation...")
+    
     
     # Process global variables that accumulate data
     if not hasattr(sys.modules[__name__], 'GLOBAL_DATA_STORE'):
@@ -336,9 +333,9 @@ def test_global_state_accumulation():
     after_globals_memory = monitor_memory_usage()
     global_memory = after_globals_memory['rss_mb'] - initial_memory['rss_mb']
     
-    print(f"Global state using {global_memory:.1f} MB")
-    print(f"Global data store size: {len(sys.modules[__name__].GLOBAL_DATA_STORE)}")
-    print(f"Global request log size: {len(sys.modules[__name__].GLOBAL_REQUEST_LOG)}")
+    
+    
+    
     
     if global_memory > 5:  # Global state using too much memory
         raise MemoryError(f"Global state accumulation: {global_memory:.1f} MB used")
@@ -346,62 +343,51 @@ def test_global_state_accumulation():
     return global_memory
 
 def main():
-    print("🚨 Starting memory leak patterns scenario...")
     
     memory_leaks_detected = []
     
     try:
         # Test different types of memory leaks
         leak_tests = [
-            ("Circular References", test_circular_reference_leak),
-            ("Event Listeners", test_event_listener_leak), 
-            ("Unbounded Cache", test_unbounded_cache_leak),
-            ("Thread-Local Storage", test_thread_local_leak),
-            ("Global State Accumulation", test_global_state_accumulation)
+            ("Circular References", check_circular_reference_leak),
+            ("Event Listeners", check_event_listener_leak), 
+            ("Unbounded Cache", check_unbounded_cache_leak),
+            ("Thread-Local Storage", check_thread_local_leak),
+            ("Global State Accumulation", check_global_state_accumulation)
         ]
         
-        for test_name, test_func in leak_tests:
-            print(f"\n=== {test_name} Test ===")
+        for check_name, check_func in leak_tests:
+            
             
             try:
-                memory_leaked = test_func()
-                print(f"✅ {test_name}: {memory_leaked:.1f} MB impact")
+                memory_leaked = check_func()
                 
             except MemoryError as e:
-                print(f"🚨 {test_name} LEAK DETECTED: {e}")
-                memory_leaks_detected.append((test_name, str(e)))
+                memory_leaks_detected.append((check_name, str(e)))
                 
             except Exception as e:
-                print(f"🚨 {test_name} test error: {e}")
         
         # Final summary
-        print(f"\n📊 Memory Leak Detection Summary:")
-        print(f"   Tests completed: {len(leak_tests)}")
-        print(f"   Leaks detected: {len(memory_leaks_detected)}")
+        
+        
         
         if memory_leaks_detected:
-            print("🚨 Memory leaks detected:")
             for leak_name, leak_desc in memory_leaks_detected:
-                print(f"   • {leak_name}: {leak_desc}")
+                
             
             # Raise final exception with all detected leaks
             leak_summary = "; ".join([f"{name}: {desc}" for name, desc in memory_leaks_detected])
             raise MemoryError(f"Multiple memory leaks detected: {leak_summary}")
         
-        print("✅ No significant memory leaks detected")
         
     except Exception as e:
-        print(f"🚨 Memory leak scenario exception: {e}")
         time.sleep(2)
         raise
 
 if __name__ == "__main__":
     try:
         main()
-        print("✅ Memory leak patterns scenario completed!")
     except Exception as e:
-        print(f"🚨 Memory leak patterns scenario failed: {e}")
     finally:
-        print("Stopping ThinkingSDK...")
+        
         thinking.stop()
-        print("Check ThinkingSDK server for memory leak pattern analysis!")

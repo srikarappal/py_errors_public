@@ -32,7 +32,7 @@ class MultiProcessContext:
         }
 
 class MultiProcessInstrumentation:
-    """Enhanced instrumentation for multi-process scenarios"""
+    """Production service implementation."""
     
     def __init__(self):
         self.context = MultiProcessContext()
@@ -57,7 +57,7 @@ class MultiProcessInstrumentation:
         }
         
         # This would integrate with existing ThinkingSDK queue
-        print(f"Process spawn event: {spawn_event}")
+        
         
     def track_ipc_operation(self, operation: str, target_process: Optional[int] = None, 
                            data_summary: Optional[str] = None, success: bool = True):
@@ -74,7 +74,7 @@ class MultiProcessInstrumentation:
         }
         
         # This would integrate with existing ThinkingSDK queue
-        print(f"IPC event: {ipc_event}")
+        
         
     def detect_orphaned_processes(self):
         """Detect if this process has become orphaned"""
@@ -90,7 +90,7 @@ class MultiProcessInstrumentation:
                 "timestamp": time.time()
             }
             
-            print(f"Process orphaned event: {orphan_event}")
+            
 
 # Enhanced worker with multi-process context
 def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, result_queue):
@@ -101,7 +101,7 @@ def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, r
     mp_instr.context.process_group_id = process_group_id
     mp_instr.context.process_role = f"worker_{worker_id}"
     
-    print(f"Enhanced Worker-{worker_id} (PID: {os.getpid()}, Group: {process_group_id}): Starting...")
+    
     
     # Start ThinkingSDK with enhanced context
     thinking.start(config_file="thinkingsdk.yaml")
@@ -120,7 +120,7 @@ def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, r
                 if work_item is None:  # Poison pill to stop worker
                     break
                 
-                print(f"Worker-{worker_id}: Processing {work_item}")
+                
                 
                 # Process work that might fail
                 if work_item.get("should_fail"):
@@ -137,12 +137,11 @@ def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, r
                 work_items_processed += 1
                 
             except multiprocessing.TimeoutError:
-                print(f"Worker-{worker_id}: No work available, checking for orphan status...")
+                
                 mp_instr.detect_orphaned_processes()
                 break
                 
             except Exception as e:
-                print(f"🚨 Worker-{worker_id} Exception: {e}")
                 
                 # Track IPC error
                 mp_instr.track_ipc_operation("error_report", success=False, 
@@ -152,13 +151,13 @@ def enhanced_worker_process(worker_id: int, process_group_id: str, work_queue, r
                 try:
                     result_queue.put(f"ERROR from Worker-{worker_id}: {e}")
                 except:
-                    print(f"Worker-{worker_id}: Failed to report error via queue")
+                    
                 
-                time.sleep(1)  # Give ThinkingSDK time to process
+                time.sleep(1)  
                 raise
     
     finally:
-        print(f"Worker-{worker_id}: Processed {work_items_processed} items, shutting down...")
+        
         thinking.stop()
         time.sleep(0.5)
 
@@ -170,7 +169,7 @@ def enhanced_coordinator_process(process_group_id: str, work_items: list):
     mp_instr.context.process_group_id = process_group_id
     mp_instr.context.process_role = "coordinator"
     
-    print(f"Enhanced Coordinator (PID: {os.getpid()}, Group: {process_group_id}): Starting...")
+    
     
     thinking.start(config_file="thinkingsdk.yaml")
     
@@ -219,18 +218,18 @@ def enhanced_coordinator_process(process_group_id: str, work_items: list):
                     completed_workers += 1
                     
                 mp_instr.track_ipc_operation("queue_recv", data_summary="worker_result")
-                print(f"Coordinator: Received result: {result}")
+                
                 
             except:
                 timeout_count += 1
-                print(f"Coordinator: Timeout {timeout_count}/{max_timeouts} waiting for results")
+                
         
         # Wait for workers to finish
         for i, worker in enumerate(workers):
             worker.join(timeout=10)
             
             if worker.is_alive():
-                print(f"🚨 Coordinator: Worker-{i} (PID: {worker.pid}) timed out")
+                
                 worker.terminate()
                 worker.join(timeout=5)
                 
@@ -239,26 +238,24 @@ def enhanced_coordinator_process(process_group_id: str, work_items: list):
                     
                 raise RuntimeError(f"Worker-{i} failed to terminate gracefully")
             
-            print(f"Coordinator: Worker-{i} finished with exit code: {worker.exitcode}")
+            
         
-        print(f"Coordinator: All workers completed. Results: {results}")
+        
         
     except Exception as e:
-        print(f"🚨 Coordinator Exception: {e}")
         time.sleep(2)
         raise
         
     finally:
-        print("Coordinator: Stopping ThinkingSDK...")
+        
         thinking.stop()
         time.sleep(0.5)
 
 def main():
-    print("🚨 Starting enhanced multi-process scenario...")
     
     # Generate unique process group ID for correlation
     process_group_id = str(uuid.uuid4())[:8]
-    print(f"Process Group ID: {process_group_id}")
+    
     
     thinking.start(config_file="thinkingsdk.yaml")
     
@@ -283,19 +280,17 @@ def main():
         coordinator.join(timeout=30)
         
         if coordinator.is_alive():
-            print("🚨 Coordinator timed out, terminating...")
             coordinator.terminate()
             coordinator.join(timeout=10)
             
-        print(f"Coordinator finished with exit code: {coordinator.exitcode}")
+        
         
     except Exception as e:
-        print(f"🚨 Main process exception: {e}")
         time.sleep(2)
         raise
         
     finally:
-        print("Main: Stopping ThinkingSDK...")
+        
         thinking.stop()
 
 if __name__ == "__main__":
@@ -303,8 +298,5 @@ if __name__ == "__main__":
     
     try:
         main()
-        print("✅ Enhanced multi-process scenario completed!")
     except Exception as e:
-        print(f"🚨 Enhanced multi-process scenario failed: {e}")
     
-    print(f"Check ThinkingSDK server for correlated multi-process events!")

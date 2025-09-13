@@ -20,11 +20,11 @@ def withdraw(amount, account_holder):
     global bank_account, transaction_log
     
     try:
-        print(f"{account_holder}: Attempting to withdraw ${amount}")
+        
         
         # Race condition: Check balance and withdraw are not atomic
         current_balance = bank_account["balance"]
-        print(f"{account_holder}: Current balance: ${current_balance}")
+        
         
         if current_balance >= amount:
             # Process processing delay - this creates the race condition window
@@ -41,7 +41,7 @@ def withdraw(amount, account_holder):
                 "timestamp": time.time()
             })
             
-            print(f"{account_holder}: Successfully withdrew ${amount}, new balance: ${bank_account['balance']}")
+            
             
             # Detect data corruption - balance should never go negative
             if bank_account["balance"] < 0:
@@ -49,15 +49,13 @@ def withdraw(amount, account_holder):
                                  f"Balance: ${bank_account['balance']}, "
                                  f"Last withdrawal: ${amount} by {account_holder}")
         else:
-            print(f"{account_holder}: Insufficient funds for ${amount}")
+            
             
     except Exception as e:
-        print(f"🚨 {account_holder} Exception: {e}")
         raise
 
 def main():
-    print("🚨 Starting race condition scenario...")
-    print(f"Initial balance: ${bank_account['balance']}")
+    
     
     # Create multiple threads trying to withdraw simultaneously
     threads = []
@@ -84,16 +82,15 @@ def main():
     for thread in threads:
         thread.join()
     
-    print(f"\n📊 Final Results:")
-    print(f"Final balance: ${bank_account['balance']}")
-    print(f"Total transactions: {len(transaction_log)}")
+    
+    
     
     # Analyze for data corruption
     total_withdrawn = sum(tx["amount"] for tx in transaction_log if tx["action"] == "withdraw")
     expected_balance = 1000.0 - total_withdrawn
     
-    print(f"Expected balance: ${expected_balance}")
-    print(f"Actual balance: ${bank_account['balance']}")
+    
+    
     
     if bank_account["balance"] != expected_balance:
         raise RuntimeError(f"DATA CORRUPTION DETECTED: Expected ${expected_balance}, "
@@ -103,10 +100,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-        print("✅ No race condition detected this time - try running again!")
     except Exception as e:
-        print(f"\n🚨 Race condition captured: {e}")
-        time.sleep(2)  # Give ThinkingSDK time to process
+        time.sleep(2)  
     finally:
         thinking.stop()
-        print("ThinkingSDK stopped. Check server for race condition analysis!")

@@ -93,7 +93,6 @@ class MemoryLeakyHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(response_data).encode())
             
         except Exception as e:
-            print(f"🚨 Handler exception: {e}")
             self.send_response(500)
             self.end_headers()
             self.wfile.write(f"Internal server error: {e}".encode())
@@ -149,7 +148,6 @@ class LongRunningServerMonitor:
         self.monitoring = True
         monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         monitor_thread.start()
-        print("📊 Server monitoring started...")
     
     def stop_monitoring(self):
         """Stop monitoring"""
@@ -172,7 +170,6 @@ class LongRunningServerMonitor:
                 time.sleep(5)  # Check every 5 seconds
                 
             except Exception as e:
-                print(f"🚨 Monitoring error: {e}")
                 time.sleep(5)
     
     def _collect_metrics(self):
@@ -180,7 +177,7 @@ class LongRunningServerMonitor:
         process = psutil.Process()
         
         # Test server responsiveness
-        response_time = self._test_server_response()
+        response_time = self._check_server_response()
         
         return {
             'timestamp': time.time(),
@@ -197,7 +194,7 @@ class LongRunningServerMonitor:
             }
         }
     
-    def _test_server_response(self):
+    def _check_server_response(self):
         """Test server response time"""
         try:
             start_time = time.time()
@@ -216,7 +213,6 @@ class LongRunningServerMonitor:
             return response_time
             
         except Exception as e:
-            print(f"⚠️ Server response test failed: {e}")
             return 9999  # Indicates server unresponsive
     
     def _check_alerts(self, metrics):
@@ -240,7 +236,6 @@ class LongRunningServerMonitor:
         
         # Trigger alerts
         for alert in alerts:
-            print(f"🚨 ALERT: {alert}")
             # In real scenario, this would trigger ThinkingSDK exception
             if "MEMORY LEAK" in alert:
                 raise MemoryError(f"Memory leak detected in long-running server: {alert}")
@@ -256,19 +251,18 @@ class LongRunningServerMonitor:
     def _log_metrics(self, metrics):
         """Log current metrics"""
         uptime_hours = metrics['uptime_seconds'] / 3600
-        print(f"📊 Server Health (uptime: {uptime_hours:.1f}h):")
-        print(f"   Memory: {metrics['memory_mb']:.1f}MB | Threads: {metrics['thread_count']} | CPU: {metrics['cpu_percent']:.1f}%")
-        print(f"   Response: {metrics['response_time_ms']:.1f}ms | Sessions: {metrics['handler_metrics']['active_sessions']}")
-        print(f"   Request History: {metrics['handler_metrics']['request_history_size']} | Cache: {metrics['handler_metrics']['cache_size']}")
+        
+        
+        
+        
 
-def load_test_server(server_port, duration_seconds=60, concurrent_clients=5):
+def load_check_server(server_port, duration_seconds=60, concurrent_clients=5):
     """Run load test against the server"""
     
-    print(f"🔥 Starting load test: {concurrent_clients} clients for {duration_seconds}s")
     
     def client_worker(client_id):
         """Individual client worker"""
-        session_id = f"load_test_session_{client_id}"
+        session_id = f"load_check_session_{client_id}"
         requests_made = 0
         
         endpoints = ['/health', '/data', '/heavy-computation', '/api/users', '/api/orders']
@@ -295,10 +289,9 @@ def load_test_server(server_port, duration_seconds=60, concurrent_clients=5):
                 time.sleep(random.uniform(0.1, 1.0))
                 
             except Exception as e:
-                print(f"🚨 Client-{client_id} error: {e}")
                 time.sleep(1)
         
-        print(f"Client-{client_id}: Made {requests_made} requests in {duration_seconds}s")
+        
         return requests_made
     
     # Run concurrent clients
@@ -311,17 +304,14 @@ def load_test_server(server_port, duration_seconds=60, concurrent_clients=5):
                 requests = future.result()
                 total_requests += requests
             except Exception as e:
-                print(f"🚨 Load test client failed: {e}")
     
-    print(f"🔥 Load test completed: {total_requests} total requests")
     return total_requests
 
 def main():
-    print("🚨 Starting long-running server scenario...")
     
     # Start server
     server_port = 8765
-    print(f"🚀 Starting HTTP server on port {server_port}...")
+    
     
     try:
         server = ThreadingHTTPServer(('localhost', server_port), MemoryLeakyHandler)
@@ -330,56 +320,47 @@ def main():
         
         # Wait for server to start
         time.sleep(2)
-        print(f"✅ Server started successfully")
         
         # Start monitoring
         monitor = LongRunningServerMonitor(server_port)
         monitor.start_monitoring()
         
         # Run load tests in phases
-        test_phases = [
+        check_phases = [
             (30, 2, "Warm-up phase"),
             (60, 5, "Normal load phase"), 
             (45, 10, "High load phase"),
             (30, 3, "Cool-down phase")
         ]
         
-        for duration, clients, phase_name in test_phases:
-            print(f"\n🔄 {phase_name}: {clients} clients for {duration}s")
+        for duration, clients, phase_name in check_phases:
             
             try:
-                requests_made = load_test_server(server_port, duration, clients)
-                print(f"✅ {phase_name} completed: {requests_made} requests")
+                requests_made = load_check_server(server_port, duration, clients)
                 
                 # Brief pause between phases
                 time.sleep(5)
                 
             except Exception as e:
-                print(f"🚨 {phase_name} failed: {e}")
         
         # Final monitoring check
-        print("\n📊 Final server health check...")
         time.sleep(10)
         
         # Force garbage collection and check if memory was released
-        print("🗑️ Forcing garbage collection...")
         gc.collect()
         time.sleep(5)
         
         final_metrics = monitor._collect_metrics()
-        print(f"📊 Final metrics: {final_metrics['memory_mb']:.1f}MB, {final_metrics['handler_metrics']}")
         
         # Check for memory that wasn't released
         if final_metrics['memory_mb'] > 100:  # Arbitrary threshold
             raise ResourceWarning(f"Server memory usage still high after GC: {final_metrics['memory_mb']:.1f}MB")
         
     except Exception as e:
-        print(f"🚨 Long-running server scenario exception: {e}")
         time.sleep(2)
         raise
     
     finally:
-        print("🛑 Shutting down server...")
         if 'monitor' in locals():
             monitor.stop_monitoring()
         if 'server' in locals():
@@ -390,10 +371,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-        print("✅ Long-running server scenario completed!")
     except Exception as e:
-        print(f"🚨 Long-running server scenario failed: {e}")
     finally:
-        print("Stopping ThinkingSDK...")
+        
         thinking.stop()
-        print("Check ThinkingSDK server for long-running server analysis!")

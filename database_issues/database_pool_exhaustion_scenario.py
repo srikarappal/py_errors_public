@@ -30,7 +30,7 @@ def get_connection():
         active_connections += 1
         conn = sqlite3.connect(":memory:", check_same_thread=False)
         connection_pool.append(conn)
-        print(f"🔗 Connection acquired. Active: {active_connections}/{MAX_CONNECTIONS}")
+        
         return conn
 
 def release_connection(conn):
@@ -42,34 +42,32 @@ def release_connection(conn):
             connection_pool.remove(conn)
             conn.close()
             active_connections -= 1
-            print(f"🔓 Connection released. Active: {active_connections}/{MAX_CONNECTIONS}")
 
 def database_worker(worker_id, hold_time=2.0):
     """Worker that holds database connection"""
     try:
-        print(f"Worker-{worker_id}: Requesting database connection...")
+        
         
         # Get connection from pool
         conn = get_connection()
         
         # Process database work
         cursor = conn.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS test_table (id INTEGER, data TEXT)")
-        cursor.execute("INSERT INTO test_table VALUES (?, ?)", (worker_id, f"data_{worker_id}"))
+        cursor.execute("CREATE TABLE IF NOT EXISTS check_table (id INTEGER, data TEXT)")
+        cursor.execute("INSERT INTO check_table VALUES (?, ?)", (worker_id, f"data_{worker_id}"))
         conn.commit()
         
-        print(f"Worker-{worker_id}: Database work started, holding connection for {hold_time}s...")
+        
         time.sleep(hold_time)  # Hold connection longer than needed
         
         # Query data
-        cursor.execute("SELECT * FROM test_table WHERE id = ?", (worker_id,))
+        cursor.execute("SELECT * FROM check_table WHERE id = ?", (worker_id,))
         result = cursor.fetchone()
-        print(f"Worker-{worker_id}: Query result: {result}")
+        
         
         return f"Worker-{worker_id}: Success"
         
     except Exception as e:
-        print(f"🚨 Worker-{worker_id} Exception: {e}")
         raise
         
     finally:
@@ -79,7 +77,6 @@ def database_worker(worker_id, hold_time=2.0):
 def process_n_plus_one_queries():
     """Process N+1 query problem"""
     try:
-        print("🔍 Simulating N+1 query problem...")
         
         conn = get_connection()
         cursor = conn.cursor()
@@ -100,12 +97,12 @@ def process_n_plus_one_queries():
         conn.commit()
         
         # N+1 Query Anti-pattern
-        print("❌ Executing N+1 queries (inefficient pattern)...")
+        
         
         # Query 1: Get all authors
         cursor.execute("SELECT * FROM authors")
         authors = cursor.fetchall()
-        print(f"📚 Found {len(authors)} authors")
+        
         
         # Query N: For each author, get their books (N additional queries)
         all_author_books = []
@@ -122,9 +119,9 @@ def process_n_plus_one_queries():
                 "book_count": len(books)
             })
             
-            print(f"  📖 {author_name}: {len(books)} books")
+            
         
-        print(f"🚨 N+1 Problem: Executed {1 + len(authors)} queries instead of 1-2!")
+        
         
         # Better approach (commented for comparison):
         # cursor.execute("""
@@ -137,7 +134,6 @@ def process_n_plus_one_queries():
         return all_author_books
         
     except Exception as e:
-        print(f"🚨 N+1 Query Exception: {e}")
         raise
         
     finally:
@@ -145,11 +141,10 @@ def process_n_plus_one_queries():
             release_connection(conn)
 
 def main():
-    print("🚨 Starting database connection pool exhaustion scenario...")
     
     try:
         # Test 1: Pool exhaustion with concurrent workers
-        print("\n=== Test 1: Connection Pool Exhaustion ===")
+        
         
         futures = []
         with ThreadPoolExecutor(max_workers=10) as executor:
@@ -167,21 +162,18 @@ def main():
             for future in as_completed(futures, timeout=15):
                 try:
                     result = future.result()
-                    print(f"✅ {result}")
                     completed_count += 1
                 except Exception as e:
-                    print(f"🚨 Worker failed: {e}")
                     error_count += 1
         
-        print(f"📊 Pool exhaustion test: {completed_count} succeeded, {error_count} failed")
         
         # Test 2: N+1 Query Problem
-        print("\n=== Test 2: N+1 Query Anti-pattern ===")
+        
         author_books = process_n_plus_one_queries()
-        print(f"📚 Retrieved data for {len(author_books)} authors with N+1 queries")
+        
         
         # Test 3: Connection leak processing
-        print("\n=== Test 3: Connection Leak Detection ===")
+        
         
         leaked_connections = []
         try:
@@ -189,29 +181,26 @@ def main():
             for i in range(3):
                 conn = get_connection()
                 leaked_connections.append(conn)
-                print(f"💧 Leaked connection {i+1}")
+                
             
             # Try to get more connections - should fail
             extra_conn = get_connection()
-            print("❌ Should not have been able to get additional connection!")
             
         except RuntimeError as e:
-            print(f"✅ Connection leak detected correctly: {e}")
             
         finally:
             # Clean up leaked connections
             for i, conn in enumerate(leaked_connections):
-                print(f"🧹 Cleaning up leaked connection {i+1}")
+                
                 release_connection(conn)
         
     except Exception as e:
-        print(f"🚨 Database scenario exception: {e}")
-        time.sleep(2)  # Give ThinkingSDK time to process
+        time.sleep(2)  
         raise
     
     finally:
         # Cleanup any remaining connections
-        print(f"\n🧹 Final cleanup: {len(connection_pool)} connections to clean")
+        
         for conn in connection_pool.copy():
             conn.close()
         connection_pool.clear()
@@ -219,10 +208,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-        print("✅ Database connection pool scenario completed!")
     except Exception as e:
-        print(f"🚨 Database scenario failed: {e}")
     finally:
-        print("Stopping ThinkingSDK...")
+        
         thinking.stop()
-        print("Check ThinkingSDK server for database connection pool analysis!")

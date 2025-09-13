@@ -50,13 +50,11 @@ class InventoryManager:
     
     def reserve_inventory_unsafe(self, product_id: str, quantity: int) -> bool:
         """Unsafe inventory reservation with race condition"""
-        print(f"🔍 Checking inventory for {product_id}: {quantity} units")
         
         # Race condition: Check and update are not atomic
         current_inventory = self.get_product_inventory(product_id)
         
         if current_inventory >= quantity:
-            print(f"✅ Inventory available: {current_inventory} >= {quantity}")
             
             # Process processing delay (network call, validation, etc.)
             time.sleep(random.uniform(0.01, 0.1))
@@ -65,7 +63,6 @@ class InventoryManager:
             product = self.products[product_id]
             product.inventory_count -= quantity
             
-            print(f"📦 Reserved {quantity} units of {product_id}. New inventory: {product.inventory_count}")
             
             # Detect overselling
             if product.inventory_count < 0:
@@ -73,7 +70,6 @@ class InventoryManager:
             
             return True
         else:
-            print(f"❌ Insufficient inventory: {current_inventory} < {quantity}")
             return False
     
     def reserve_inventory_safe(self, product_id: str, quantity: int) -> bool:
@@ -88,17 +84,14 @@ class InventoryManager:
                 product = self.products[product_id]
                 product.inventory_count -= quantity
                 
-                print(f"🔒 Safe reservation: {quantity} units of {product_id}. New inventory: {product.inventory_count}")
                 return True
             else:
-                print(f"❌ Safe check - insufficient inventory: {current_inventory} < {quantity}")
                 return False
     
     def create_order(self, user_id: str, product_id: str, quantity: int, use_safe_reservation: bool = False) -> Order:
         """Create order with inventory reservation"""
         order_id = f"order_{len(self.orders)}_{user_id}_{int(time.time())}"
         
-        print(f"🛒 Creating order {order_id}: {quantity}x {product_id} for user {user_id}")
         
         try:
             # Choose reservation method
@@ -110,16 +103,13 @@ class InventoryManager:
             if reserved:
                 order = Order(order_id, user_id, product_id, quantity, time.time(), "confirmed")
                 self.orders.append(order)
-                print(f"✅ Order {order_id} confirmed")
                 return order
             else:
                 order = Order(order_id, user_id, product_id, quantity, time.time(), "failed_insufficient_inventory")
                 self.orders.append(order)
-                print(f"❌ Order {order_id} failed - insufficient inventory")
                 return order
                 
         except ValueError as e:
-            print(f"🚨 Order {order_id} caused overselling: {e}")
             
             # Create failed order
             order = Order(order_id, user_id, product_id, quantity, time.time(), "failed_overselling")
@@ -158,7 +148,6 @@ def process_flash_sale_customer(customer_id: int, inventory_manager: InventoryMa
         # Try to buy 1-2 items
         quantity = random.choice([1, 1, 1, 2])  # Mostly 1 item, sometimes 2
         
-        print(f"🛍️ Customer-{customer_id}: Attempting to buy {quantity}x {target_product}")
         
         order = inventory_manager.create_order(
             user_id=f"user_{customer_id}",
@@ -170,20 +159,17 @@ def process_flash_sale_customer(customer_id: int, inventory_manager: InventoryMa
         return order
         
     except Exception as e:
-        print(f"🚨 Customer-{customer_id} exception: {e}")
         raise
 
 def run_flash_sale_processing(product_id: str, num_customers: int, use_safe_method: bool = False):
     """Run flash sale processing"""
     
     method_name = "SAFE" if use_safe_method else "UNSAFE"
-    print(f"\n🔥 Flash Sale Processing ({method_name}): {num_customers} customers for {product_id}")
+    
     
     inventory_manager = InventoryManager()
     initial_inventory = inventory_manager.get_product_inventory(product_id)
     
-    print(f"📦 Initial inventory for {product_id}: {initial_inventory} units")
-    print(f"👥 {num_customers} customers will attempt to purchase")
     
     # Run concurrent customers
     orders = []
@@ -219,29 +205,27 @@ def run_flash_sale_processing(product_id: str, num_customers: int, use_safe_meth
     
     total_units_sold = sum(o.quantity for o in confirmed_orders)
     
-    print(f"\n📊 Flash Sale Results ({method_name}):")
-    print(f"   Initial inventory: {initial_inventory}")
-    print(f"   Final inventory: {final_inventory}")
-    print(f"   Total units sold: {total_units_sold}")
-    print(f"   Orders confirmed: {len(confirmed_orders)}")
-    print(f"   Orders failed: {len(failed_orders)}")
-    print(f"   Exceptions: {len(exceptions)}")
+    
+    
+    
+    
+    
+    
+    
     
     # Check for overselling
     expected_final_inventory = initial_inventory - total_units_sold
     actual_inventory_discrepancy = final_inventory - expected_final_inventory
     
     if actual_inventory_discrepancy != 0:
-        print(f"🚨 Inventory discrepancy detected: {actual_inventory_discrepancy}")
     
     if final_inventory < 0:
-        print(f"🚨 OVERSELLING CONFIRMED: Final inventory is {final_inventory}")
         raise ValueError(f"Overselling detected in {method_name} method: final inventory {final_inventory}")
     
     if len(exceptions) > 0:
-        print(f"🚨 {len(exceptions)} exceptions during flash sale:")
+        
         for i, exc in enumerate(exceptions[:3]):  # Show first 3
-            print(f"   {i+1}. {exc}")
+            
         
         # Re-raise first exception for ThinkingSDK to capture
         raise exceptions[0]
@@ -257,11 +241,10 @@ def run_flash_sale_processing(product_id: str, num_customers: int, use_safe_meth
     }
 
 def main():
-    print("🚨 Starting e-commerce inventory overselling scenario...")
     
     try:
         # Test 1: Unsafe method (should cause overselling)
-        print("\n=== Test 1: Unsafe Inventory Reservation ===")
+        
         
         try:
             unsafe_results = run_flash_sale_processing(
@@ -269,11 +252,10 @@ def main():
                 num_customers=15,  # More customers than inventory
                 use_safe_method=False
             )
-            print(f"❓ Unsafe method completed without overselling: {unsafe_results}")
+            
             
         except ValueError as e:
             if "overselling" in str(e).lower():
-                print(f"✅ Overselling properly detected in unsafe method: {e}")
             else:
                 raise
         
@@ -281,7 +263,7 @@ def main():
         time.sleep(2)
         
         # Test 2: Safe method (should prevent overselling)
-        print("\n=== Test 2: Safe Inventory Reservation ===")
+        
         
         try:
             safe_results = run_flash_sale_processing(
@@ -289,17 +271,15 @@ def main():
                 num_customers=10,  # More customers than inventory (3 units)
                 use_safe_method=True
             )
-            print(f"✅ Safe method completed successfully: {safe_results}")
             
             if safe_results["final_inventory"] < 0:
                 raise ValueError("Safe method still caused overselling!")
                 
         except Exception as e:
-            print(f"🚨 Safe method failed: {e}")
             raise
         
         # Test 3: Extreme concurrency test
-        print("\n=== Test 3: Extreme Concurrency Test ===")
+        
         
         try:
             extreme_results = run_flash_sale_processing(
@@ -313,22 +293,17 @@ def main():
                 
         except ValueError as e:
             if "overselling" in str(e).lower():
-                print(f"✅ Extreme concurrency overselling detected: {e}")
             else:
                 raise
     
     except Exception as e:
-        print(f"🚨 E-commerce scenario exception: {e}")
         time.sleep(2)
         raise
 
 if __name__ == "__main__":
     try:
         main()
-        print("✅ E-commerce inventory overselling scenario completed!")
     except Exception as e:
-        print(f"🚨 E-commerce scenario failed: {e}")
     finally:
-        print("Stopping ThinkingSDK...")
+        
         thinking.stop()
-        print("Check ThinkingSDK server for inventory overselling analysis!")
