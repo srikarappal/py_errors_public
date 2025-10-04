@@ -1,8 +1,4 @@
-try:
-    import thinking_sdk_client as thinking
-except ImportError:
-    sys.exit(1)
-
+import thinking_sdk_client as thinking
 thinking.start(config_file="thinkingsdk.yaml")
 
 import re
