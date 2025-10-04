@@ -22,20 +22,14 @@ def main():
     Main function to execute the script logic.
     """
     
-
     data = {}
-    p = Path("first_process_parsing_config.json")
+    p = Path("./basic_errors/first_scenario_parsing_config.json")
     if not p.exists():
-        
         sys.exit(1)
 
-    try:
-        # Load JSON data from the file
-        with p.open("r", encoding="utf-8") as f:
-            data = json.load(f)
-    except Exception as e:
-        thinking.stop()  # Stop and flush events
-        raise
+    # Load JSON data from the file
+    with p.open("r", encoding="utf-8") as f:
+        data = json.load(f)
 
 if __name__ == "__main__":
     main()
