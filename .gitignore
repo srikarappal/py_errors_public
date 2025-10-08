@@ -13,8 +13,8 @@ env/
 # Test and cleanup scripts (hide from CCSDK)
 cleanup_test_references.py
 remove_debug_artifacts.py
-test_runner.py
-test_*.py
+#test_runner.py
+#test_*.py
 mock_github_integration.py
 scenario_results.json
 all_thinkingsdk_till_*.txt
