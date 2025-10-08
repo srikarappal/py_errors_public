@@ -1,0 +1,1 @@
+return response.json() if response.content else {}
