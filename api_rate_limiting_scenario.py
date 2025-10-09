@@ -1,0 +1,1 @@
+time.sleep(2)  # Intentionally slow
