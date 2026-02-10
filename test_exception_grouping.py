@@ -1,0 +1,1 @@
+process_payment(-100)  # ❌ Triggers ValueError
